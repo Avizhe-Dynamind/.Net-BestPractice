@@ -79,10 +79,35 @@ namespace Equinox.Infra.CrossCutting.Identity.Configuration
         private static WebApplicationBuilder AddJwtSupport(this WebApplicationBuilder builder)
         {
             var appSettingsSection = builder.Configuration.GetSection("AppSettings");
-            builder.Services.Configure<AppJwtSettings>(appSettingsSection);
+
+            builder.Services.Configure<AppJwtSettings>(options =>
+            {
+                appSettingsSection.Bind(options);
+                if (string.IsNullOrEmpty(options.SecretKey))
+                {
+                    if (builder.Environment.IsDevelopment())
+                    {
+                        options.SecretKey = "DEBUG_SECRET_KEY_REPLACE_ME_FOR_PRODUCTION";
+                    }
+                }
+            });
 
             var appSettings = appSettingsSection.Get<AppJwtSettings>();
-            var key = Encoding.ASCII.GetBytes(appSettings.SecretKey);
+            var secretKey = appSettings.SecretKey;
+
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                if (builder.Environment.IsDevelopment())
+                {
+                    secretKey = "DEBUG_SECRET_KEY_REPLACE_ME_FOR_PRODUCTION";
+                }
+                else
+                {
+                    throw new InvalidOperationException("JWT SecretKey is missing from configuration.");
+                }
+            }
+
+            var key = Encoding.ASCII.GetBytes(secretKey);
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
