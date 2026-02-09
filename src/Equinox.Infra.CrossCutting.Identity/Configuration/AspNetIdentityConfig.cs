@@ -92,7 +92,7 @@ namespace Equinox.Infra.CrossCutting.Identity.Configuration
                 }
             });
 
-            var appSettings = appSettingsSection.Get<AppJwtSettings>();
+            var appSettings = appSettingsSection.Get<AppJwtSettings>() ?? new AppJwtSettings();
             var secretKey = appSettings.SecretKey;
 
             if (string.IsNullOrEmpty(secretKey))
