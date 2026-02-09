@@ -15,20 +15,22 @@ namespace Equinox.Services.Api.Configurations
                 s.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
-                    Title = "Equinox Project",
-                    Description = "Equinox API Swagger surface",
-                    Contact = new OpenApiContact { Name = "Eduardo Pires", Email = "contato@eduardopires.net.br", Url = new Uri("http://www.eduardopires.net.br") },
+                    Title = "Equinox Project - Secure API",
+                    Description = "Equinox API with JWT Authentication and Refresh Token Support",
+                    Contact = new OpenApiContact { Name = "Eduardo Pires", Email = "contato@eduardopires.net.br" },
                     License = new OpenApiLicense { Name = "MIT", Url = new Uri("https://github.com/EduardoPires/EquinoxProject/blob/master/LICENSE") }
                 });
 
                 s.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Description = "Input the JWT like: Bearer {your token}",
+                    Description = @"JWT Authorization header using the Bearer scheme.
+                              Enter 'Bearer' [space] and then your token in the text input below.
+                              Example: 'Bearer 12345abcdef'",
                     Name = "Authorization",
-                    Scheme = "Bearer",
-                    BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT"
                 });
 
                 s.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -88,7 +90,8 @@ namespace Equinox.Services.Api.Configurations
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Equinox API v1");
+                    c.RoutePrefix = "swagger";
             });
 
             return app;

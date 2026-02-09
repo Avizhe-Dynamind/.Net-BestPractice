@@ -4,9 +4,11 @@ using Equinox.Application.ViewModels;
 using Equinox.Infra.CrossCutting.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Equinox.Services.Api.Controllers
 {
+    [EnableRateLimiting("api")]
     [Authorize]
     public class CustomerController : ApiController
     {

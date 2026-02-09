@@ -3,6 +3,7 @@ using System;
 using Equinox.Infra.CrossCutting.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Equinox.Infra.CrossCutting.Identity.Migrations
 {
     [DbContext(typeof(EquinoxIdentityContext))]
-    partial class EquinoxIdentityContextModelSnapshot : ModelSnapshot
+    [Migration("20260209120103_AddSecurityFeatures")]
+    partial class AddSecurityFeatures
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.3");

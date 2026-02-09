@@ -18,6 +18,13 @@ namespace Equinox.Infra.CrossCutting.Identity.API
         private ICollection<Claim> _userClaims;
         private ICollection<Claim> _jwtClaims;
         private ClaimsIdentity _identityClaims;
+        private string _customJwtId;
+
+        public JwtBuilder<TIdentityUser, TKey> WithJwtId(string jwtId)
+        {
+            _customJwtId = jwtId;
+            return this;
+        }
 
         public JwtBuilder<TIdentityUser, TKey> WithUserManager(UserManager<TIdentityUser> userManager)
         {
@@ -47,7 +54,10 @@ namespace Equinox.Infra.CrossCutting.Identity.API
         {
             _jwtClaims.Add(new Claim(JwtRegisteredClaimNames.Sub, _user.Id.ToString()));
             _jwtClaims.Add(new Claim(JwtRegisteredClaimNames.Email, _user.Email));
-            _jwtClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+
+            var jwtId = string.IsNullOrEmpty(_customJwtId) ? Guid.NewGuid().ToString() : _customJwtId;
+            _jwtClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, jwtId));
+
             _jwtClaims.Add(new Claim(JwtRegisteredClaimNames.Nbf, ToUnixEpochDate(DateTime.UtcNow).ToString()));
             _jwtClaims.Add(new Claim(JwtRegisteredClaimNames.Iat, ToUnixEpochDate(DateTime.UtcNow).ToString(), ClaimValueTypes.Integer64));
 

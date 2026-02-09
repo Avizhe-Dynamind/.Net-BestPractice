@@ -7,6 +7,8 @@ using Equinox.Domain.Interfaces;
 using Equinox.Infra.CrossCutting.Bus;
 using Equinox.Infra.Data.Context;
 using Equinox.Infra.Data.EventSourcing;
+using Equinox.Infra.CrossCutting.Identity.Data;
+using Equinox.Infra.CrossCutting.Identity.Services;
 using Equinox.Infra.Data.Repository;
 using Equinox.Infra.Data.Repository.EventSourcing;
 using FluentValidation.Results;
@@ -47,6 +49,12 @@ namespace Equinox.Infra.CrossCutting.IoC
             builder.Services.AddScoped<IEventStoreRepository, EventStoreSqlRepository>();
             builder.Services.AddScoped<IEventStore, SqlEventStore>();
             builder.Services.AddScoped<EventStoreSqlContext>();
+
+            // Identity & Security Services
+            builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            builder.Services.AddScoped<ITokenService, TokenService>();
+            builder.Services.AddScoped<ISessionService, SessionService>();
+            builder.Services.AddScoped<ISecurityAuditService, SecurityAuditService>();
         }
     }
 }
