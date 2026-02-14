@@ -81,7 +81,14 @@ namespace Equinox.Infra.CrossCutting.Identity.Configuration
             var appSettingsSection = builder.Configuration.GetSection("AppSettings");
             builder.Services.Configure<AppJwtSettings>(appSettingsSection);
 
-            var appSettings = appSettingsSection.Get<AppJwtSettings>();
+            var appSettings = appSettingsSection.Get<AppJwtSettings>() ?? new AppJwtSettings();
+
+            if (string.IsNullOrWhiteSpace(appSettings.SecretKey))
+            {
+                throw new InvalidOperationException(
+                    "JWT SecretKey is not configured. Configure AppSettings:SecretKey using User Secrets in Development or via EQUINOX_AppSettings__SecretKey environment variable.");
+            }
+
             var key = Encoding.ASCII.GetBytes(appSettings.SecretKey);
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -95,6 +102,8 @@ namespace Equinox.Infra.CrossCutting.Identity.Configuration
                         IssuerSigningKey = new SymmetricSecurityKey(key),
                         ValidateIssuer = true,
                         ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero,
                         ValidAudience = appSettings.Audience,
                         ValidIssuer = appSettings.Issuer
                     };

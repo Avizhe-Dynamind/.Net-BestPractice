@@ -29,6 +29,10 @@ To know more about how to setup your enviroment visit the [Microsoft .NET Downlo
 
 For local development, store JWT secrets with User Secrets instead of committing them to `appsettings.*.json`:
 
+> Why does this work if `appsettings.*.json` does not contain `SecretKey`?
+>
+> ASP.NET Core merges configuration from multiple providers. In this API, `AppSettings:SecretKey` is expected to come from User Secrets (development) or `EQUINOX_AppSettings__SecretKey` (non-development), not from committed JSON files.
+
 ```bash
 cd src/Equinox.Services.Api
 dotnet user-secrets init
@@ -41,6 +45,22 @@ For production/staging, use environment variables with the `EQUINOX_` prefix:
 export EQUINOX_AppSettings__SecretKey="YOUR_PRODUCTION_SECRET_KEY"
 export EQUINOX_ConnectionStrings__DefaultConnection="YOUR_CONNECTION_STRING"
 ```
+
+## API Database Startup (optional)
+
+The API can now optionally apply migrations and seed sample data at startup using the `DatabaseStartup` section:
+
+```json
+"DatabaseStartup": {
+  "ApplyMigrationsOnStartup": true,
+  "SeedOnStartup": true
+}
+```
+
+- `ApplyMigrationsOnStartup`: runs EF Core migrations for app, event store, and identity databases.
+- `SeedOnStartup`: inserts sample identity/customer data (only if tables are empty).
+
+Set both to `false` in environments where migrations/seeding are managed by deployment pipelines.
 
 ## Technologies implemented:
 

@@ -30,6 +30,8 @@ builder.Services.AddHostedService<TokenCleanupService>();
 
 var app = builder.Build();
 
+await app.UseDatabaseStartupTasks();
+
 // Configure
 app.UseHttpsRedirection()
     .UseRateLimiter()
