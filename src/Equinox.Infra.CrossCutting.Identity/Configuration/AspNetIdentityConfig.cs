@@ -39,19 +39,27 @@ namespace Equinox.Infra.CrossCutting.Identity.Configuration
 
         private static WebApplicationBuilder AddIdentityDbContext(this WebApplicationBuilder builder)
         {
-            if (builder.Environment.IsDevelopment())
-            {
+            var useSqlite = ShouldUseSqlite(builder.Configuration);
 
+            if (useSqlite)
+            {
                 builder.Services.AddDbContext<EquinoxIdentityContext>(options =>
-                        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
                 return builder;
             }
 
             builder.Services.AddDbContext<EquinoxIdentityContext>(options =>
-                        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             return builder;
+        }
+
+
+        private static bool ShouldUseSqlite(IConfiguration configuration)
+        {
+            var mode = configuration["Database:Mode"];
+            return string.Equals(mode, "sqlite", StringComparison.OrdinalIgnoreCase);
         }
 
         private static WebApplicationBuilder AddIdentityApiSupport(this WebApplicationBuilder builder)

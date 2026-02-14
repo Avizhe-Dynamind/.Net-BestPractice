@@ -5,6 +5,7 @@ using Equinox.Infra.CrossCutting.Identity.Data;
 using Equinox.Infra.Data.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Text.Json;
@@ -17,7 +18,9 @@ namespace Equinox.Services.Api.Configurations
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
 
-            if (builder.Environment.IsDevelopment())
+            var useSqlite = ShouldUseSqlite(builder.Configuration);
+
+            if (useSqlite)
             {
                 builder.Services.AddDbContext<EquinoxContext>(options =>
                     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -35,6 +38,13 @@ namespace Equinox.Services.Api.Configurations
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             return builder;
+        }
+
+
+        private static bool ShouldUseSqlite(IConfiguration configuration)
+        {
+            var mode = configuration["Database:Mode"];
+            return string.Equals(mode, "sqlite", StringComparison.OrdinalIgnoreCase);
         }
 
         public static async Task<WebApplication> UseDatabaseStartupTasks(this WebApplication app)
@@ -57,9 +67,11 @@ namespace Equinox.Services.Api.Configurations
             var eventStoreContext = services.GetRequiredService<EventStoreSqlContext>();
             var identityContext = services.GetRequiredService<EquinoxIdentityContext>();
 
-            await equinoxContext.Database.MigrateAsync();
-            await eventStoreContext.Database.MigrateAsync();
-            await identityContext.Database.MigrateAsync();
+            var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseStartup");
+
+            await TryMigrateAsync(equinoxContext, nameof(EquinoxContext), logger);
+            await TryMigrateAsync(eventStoreContext, nameof(EventStoreSqlContext), logger);
+            await TryMigrateAsync(identityContext, nameof(EquinoxIdentityContext), logger);
 
             if (startupOptions.SeedOnStartup)
             {
@@ -67,6 +79,20 @@ namespace Equinox.Services.Api.Configurations
             }
 
             return app;
+        }
+
+        private static async Task TryMigrateAsync(DbContext context, string contextName, ILogger logger)
+        {
+            try
+            {
+                await context.Database.MigrateAsync();
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("PendingModelChangesWarning", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning(ex,
+                    "Skipped automatic migration for {ContextName} because the EF model has pending changes. Add a migration for this context or disable DatabaseStartup:ApplyMigrationsOnStartup.",
+                    contextName);
+            }
         }
 
         private static async Task EnsureSeedData(

@@ -49,6 +49,20 @@ export EQUINOX_ConnectionStrings__DefaultConnection="YOUR_CONNECTION_STRING"
 ## API Database Startup (optional)
 
 The API can now optionally apply migrations and seed sample data at startup using the `DatabaseStartup` section:
+The database provider is now controlled by `Database:Mode`:
+
+```json
+"Database": {
+  "Mode": "sqlite"
+}
+```
+
+Supported values:
+- `sqlite`
+- `sqlserver`
+
+The API uses this mode consistently for application, event store, and identity contexts.
+
 
 ```json
 "DatabaseStartup": {
