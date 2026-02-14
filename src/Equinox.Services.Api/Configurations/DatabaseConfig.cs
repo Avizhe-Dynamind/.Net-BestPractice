@@ -5,6 +5,7 @@ using Equinox.Infra.CrossCutting.Identity.Data;
 using Equinox.Infra.Data.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Text.Json;
 
@@ -15,6 +16,17 @@ namespace Equinox.Services.Api.Configurations
         public static WebApplicationBuilder AddDatabaseConfiguration(this WebApplicationBuilder builder)
         {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
+
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddDbContext<EquinoxContext>(options =>
+                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+                builder.Services.AddDbContext<EventStoreSqlContext>(options =>
+                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+                return builder;
+            }
 
             builder.Services.AddDbContext<EquinoxContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

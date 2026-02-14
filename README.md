@@ -62,6 +62,8 @@ The API can now optionally apply migrations and seed sample data at startup usin
 
 Set both to `false` in environments where migrations/seeding are managed by deployment pipelines.
 
+If automatic migrations encounter EF pending model changes, the API logs a warning and continues startup; create a new migration to reconcile the model before enabling automatic migration in that environment.
+
 ## Technologies implemented:
 
 - ASP.NET 9.0
