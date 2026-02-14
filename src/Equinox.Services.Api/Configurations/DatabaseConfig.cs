@@ -5,6 +5,7 @@ using Equinox.Infra.CrossCutting.Identity.Data;
 using Equinox.Infra.Data.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Linq;
@@ -23,19 +24,23 @@ namespace Equinox.Services.Api.Configurations
             if (useSqlite)
             {
                 builder.Services.AddDbContext<EquinoxContext>(options =>
-                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
+                        .ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning)));
 
                 builder.Services.AddDbContext<EventStoreSqlContext>(options =>
-                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
+                        .ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning)));
 
                 return builder;
             }
 
             builder.Services.AddDbContext<EquinoxContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+                        .ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning)));
 
             builder.Services.AddDbContext<EventStoreSqlContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+                        .ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning)));
 
             return builder;
         }

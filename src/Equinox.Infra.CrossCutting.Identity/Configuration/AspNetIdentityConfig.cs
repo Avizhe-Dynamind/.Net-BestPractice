@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -44,13 +45,15 @@ namespace Equinox.Infra.CrossCutting.Identity.Configuration
             if (useSqlite)
             {
                 builder.Services.AddDbContext<EquinoxIdentityContext>(options =>
-                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
+                        .ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning)));
 
                 return builder;
             }
 
             builder.Services.AddDbContext<EquinoxIdentityContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+                        .ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning)));
 
             return builder;
         }

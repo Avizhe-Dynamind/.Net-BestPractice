@@ -77,6 +77,7 @@ The API uses this mode consistently for application, event store, and identity c
 Set both to `false` in environments where migrations/seeding are managed by deployment pipelines.
 
 If automatic migrations encounter EF pending model changes, the API logs a warning and continues startup; create a new migration to reconcile the model before enabling automatic migration in that environment.
+When `DatabaseStartup:ApplyMigrationsOnStartup` is enabled, pending-model-change warnings are configured to be logged (not thrown) so startup can continue while you add the missing migration.
 
 ## Technologies implemented:
 
