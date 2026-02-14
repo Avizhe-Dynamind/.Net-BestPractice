@@ -24,6 +24,46 @@ Also you can run the Equinox Project in Visual Studio Code (Windows, Linux or Ma
 
 To know more about how to setup your enviroment visit the [Microsoft .NET Download Guide](https://www.microsoft.com/net/download)
 
+
+## Security Secrets Setup
+
+For local development, store JWT secrets with User Secrets instead of committing them to `appsettings.*.json`:
+
+> Why does this work if `appsettings.*.json` does not contain `SecretKey`?
+>
+> ASP.NET Core merges configuration from multiple providers. In this API, `AppSettings:SecretKey` is expected to come from User Secrets (development) or `EQUINOX_AppSettings__SecretKey` (non-development), not from committed JSON files.
+
+```bash
+cd src/Equinox.Services.Api
+dotnet user-secrets init
+dotnet user-secrets set "AppSettings:SecretKey" "YOUR_GENERATED_SECRET_KEY"
+```
+
+For production/staging, use environment variables with the `EQUINOX_` prefix:
+
+```bash
+export EQUINOX_AppSettings__SecretKey="YOUR_PRODUCTION_SECRET_KEY"
+export EQUINOX_ConnectionStrings__DefaultConnection="YOUR_CONNECTION_STRING"
+```
+
+## API Database Startup (optional)
+
+The API can now optionally apply migrations and seed sample data at startup using the `DatabaseStartup` section:
+
+```json
+"DatabaseStartup": {
+  "ApplyMigrationsOnStartup": true,
+  "SeedOnStartup": true
+}
+```
+
+- `ApplyMigrationsOnStartup`: runs EF Core migrations for app, event store, and identity databases.
+- `SeedOnStartup`: inserts sample identity/customer data (only if tables are empty).
+
+Set both to `false` in environments where migrations/seeding are managed by deployment pipelines.
+
+If automatic migrations encounter EF pending model changes, the API logs a warning and continues startup; create a new migration to reconcile the model before enabling automatic migration in that environment.
+
 ## Technologies implemented:
 
 - ASP.NET 9.0
