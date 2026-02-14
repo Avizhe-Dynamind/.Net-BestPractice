@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -39,19 +40,29 @@ namespace Equinox.Infra.CrossCutting.Identity.Configuration
 
         private static WebApplicationBuilder AddIdentityDbContext(this WebApplicationBuilder builder)
         {
-            if (builder.Environment.IsDevelopment())
-            {
+            var useSqlite = ShouldUseSqlite(builder.Configuration);
 
+            if (useSqlite)
+            {
                 builder.Services.AddDbContext<EquinoxIdentityContext>(options =>
-                        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+                    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
+                        .ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning)));
 
                 return builder;
             }
 
             builder.Services.AddDbContext<EquinoxIdentityContext>(options =>
-                        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+                        .ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning)));
 
             return builder;
+        }
+
+
+        private static bool ShouldUseSqlite(IConfiguration configuration)
+        {
+            var mode = configuration["Database:Mode"];
+            return string.Equals(mode, "sqlite", StringComparison.OrdinalIgnoreCase);
         }
 
         private static WebApplicationBuilder AddIdentityApiSupport(this WebApplicationBuilder builder)
@@ -81,7 +92,14 @@ namespace Equinox.Infra.CrossCutting.Identity.Configuration
             var appSettingsSection = builder.Configuration.GetSection("AppSettings");
             builder.Services.Configure<AppJwtSettings>(appSettingsSection);
 
-            var appSettings = appSettingsSection.Get<AppJwtSettings>();
+            var appSettings = appSettingsSection.Get<AppJwtSettings>() ?? new AppJwtSettings();
+
+            if (string.IsNullOrWhiteSpace(appSettings.SecretKey))
+            {
+                throw new InvalidOperationException(
+                    "JWT SecretKey is not configured. Configure AppSettings:SecretKey using User Secrets in Development or via EQUINOX_AppSettings__SecretKey environment variable.");
+            }
+
             var key = Encoding.ASCII.GetBytes(appSettings.SecretKey);
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -95,6 +113,8 @@ namespace Equinox.Infra.CrossCutting.Identity.Configuration
                         IssuerSigningKey = new SymmetricSecurityKey(key),
                         ValidateIssuer = true,
                         ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero,
                         ValidAudience = appSettings.Audience,
                         ValidIssuer = appSettings.Issuer
                     };
