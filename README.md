@@ -24,6 +24,24 @@ Also you can run the Equinox Project in Visual Studio Code (Windows, Linux or Ma
 
 To know more about how to setup your enviroment visit the [Microsoft .NET Download Guide](https://www.microsoft.com/net/download)
 
+
+## Security Secrets Setup
+
+For local development, store JWT secrets with User Secrets instead of committing them to `appsettings.*.json`:
+
+```bash
+cd src/Equinox.Services.Api
+dotnet user-secrets init
+dotnet user-secrets set "AppSettings:SecretKey" "YOUR_GENERATED_SECRET_KEY"
+```
+
+For production/staging, use environment variables with the `EQUINOX_` prefix:
+
+```bash
+export EQUINOX_AppSettings__SecretKey="YOUR_PRODUCTION_SECRET_KEY"
+export EQUINOX_ConnectionStrings__DefaultConnection="YOUR_CONNECTION_STRING"
+```
+
 ## Technologies implemented:
 
 - ASP.NET 9.0
