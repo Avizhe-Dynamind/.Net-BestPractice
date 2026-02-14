@@ -57,11 +57,9 @@ namespace Equinox.Services.Api.Configurations
             var eventStoreContext = services.GetRequiredService<EventStoreSqlContext>();
             var identityContext = services.GetRequiredService<EquinoxIdentityContext>();
 
-            var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseStartup");
-
-            await TryMigrateAsync(equinoxContext, nameof(EquinoxContext), logger);
-            await TryMigrateAsync(eventStoreContext, nameof(EventStoreSqlContext), logger);
-            await TryMigrateAsync(identityContext, nameof(EquinoxIdentityContext), logger);
+            await equinoxContext.Database.MigrateAsync();
+            await eventStoreContext.Database.MigrateAsync();
+            await identityContext.Database.MigrateAsync();
 
             if (startupOptions.SeedOnStartup)
             {
@@ -69,20 +67,6 @@ namespace Equinox.Services.Api.Configurations
             }
 
             return app;
-        }
-
-        private static async Task TryMigrateAsync(DbContext context, string contextName, ILogger logger)
-        {
-            try
-            {
-                await context.Database.MigrateAsync();
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("PendingModelChangesWarning", StringComparison.OrdinalIgnoreCase))
-            {
-                logger.LogWarning(ex,
-                    "Skipped automatic migration for {ContextName} because the EF model has pending changes. Add a migration for this context or disable DatabaseStartup:ApplyMigrationsOnStartup.",
-                    contextName);
-            }
         }
 
         private static async Task EnsureSeedData(
