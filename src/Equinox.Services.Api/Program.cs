@@ -9,8 +9,12 @@ builder.Configuration
     .SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables("EQUINOX_")
-    .AddUserSecrets<Program>(optional: true);
+    .AddEnvironmentVariables("EQUINOX_");
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>(optional: true);
+}
 
 // Configure Services
 builder.AddApiConfiguration()                   // Api Configurations
@@ -25,6 +29,8 @@ builder.AddApiConfiguration()                   // Api Configurations
 builder.Services.AddHostedService<TokenCleanupService>();
 
 var app = builder.Build();
+
+await app.UseDatabaseStartupTasks();
 
 // Configure
 app.UseHttpsRedirection()
